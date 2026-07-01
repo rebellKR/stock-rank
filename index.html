@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <!-- 아이폰 화면 꽉 채우기 + 확대 방지 (터치 UI 안정화) -->
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+    />
+    <title>株のダッシュボード</title>
+
+    <!-- PWA(홈화면 앱) 설정 -->
+    <link rel="manifest" href="manifest.json" />
+    <meta name="theme-color" content="#0e1117" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta
+      name="apple-mobile-web-app-status-bar-style"
+      content="black-translucent"
+    />
+    <meta name="apple-mobile-web-app-title" content="My株" />
+    <link rel="apple-touch-icon" href="icons/icon-192.png" />
+
+    <link rel="stylesheet" href="styles.css" />
+    <!-- 차트 라이브러리 (초보자 친화적인 라인 그래프용) -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <!-- 차트 x축 날짜 처리용 어댑터 (Chart.js는 날짜 계산 도구가 별도 필요) -->
+    <script src="https://cdn.jsdelivr.net/npm/luxon@3.4.4/build/global/luxon.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-luxon@1.3.1/dist/chartjs-adapter-luxon.umd.min.js"></script>
+  </head>
+  <body>
+    <!-- ===== 상단 헤더 ===== -->
+    <header class="app-header">
+      <div class="title">
+        My株 <span class="title-sub">ダッシュボード</span>
+      </div>
+      <button id="refreshBtn" class="icon-btn" aria-label="새로고침">⟳</button>
+    </header>
+    <div id="statusBar" class="status-bar">데이터 불러오는 중…</div>
+
+    <!-- ===== 화면 1: 대시보드 ===== -->
+    <main id="view-dashboard" class="view active">
+      <!-- 주요 지수 -->
+      <section class="block">
+        <h2 class="block-title">주요 지수</h2>
+        <div id="indexGrid" class="index-grid"></div>
+      </section>
+
+      <!-- 관심 종목 -->
+      <section class="block">
+        <h2 class="block-title">
+          관심 종목 <span id="watchCount" class="count"></span>
+        </h2>
+        <div id="watchList" class="quote-list"></div>
+      </section>
+
+      <!-- TOP 상승/하락 -->
+      <section class="block">
+        <div class="movers-head">
+          <h2 class="block-title">TOP 상승 / 하락</h2>
+          <div class="seg">
+            <button class="seg-btn active" data-movers="up">상승</button>
+            <button class="seg-btn" data-movers="down">하락</button>
+          </div>
+        </div>
+        <div id="moversList" class="quote-list"></div>
+      </section>
+    </main>
+
+    <!-- ===== 화면 2: 투신/ETF ===== -->
+    <main id="view-etf" class="view">
+      <section class="block">
+        <h2 class="block-title">S&amp;P500 연동 상품</h2>
+        <p class="hint">
+          일본 투신(投資信託)의 基準価額은 무료 API가 없어, 동일하게
+          S&amp;P500을 추종하는 ETF로 표시합니다.
+        </p>
+        <div id="etfSp500" class="quote-list"></div>
+      </section>
+      <section class="block">
+        <h2 class="block-title">인기 ETF</h2>
+        <div id="etfPopular" class="quote-list"></div>
+      </section>
+    </main>
+
+    <!-- ===== 화면 3: 관심종목 설정 ===== -->
+    <main id="view-settings" class="view">
+      <section class="block">
+        <h2 class="block-title">관심 종목 추가</h2>
+        <p class="hint">
+          티커(종목코드)를 입력하세요. 일본주식은 코드 뒤에 <b>.T</b> (예:
+          토요타 <b>7203.T</b>), 미국주식은 티커 그대로 (예: <b>AAPL</b>).
+        </p>
+        <div class="add-row">
+          <input
+            id="tickerInput"
+            type="text"
+            placeholder="예: 7203.T, AAPL"
+            autocapitalize="characters"
+            autocomplete="off"
+          />
+          <button id="addBtn" class="primary-btn">추가</button>
+        </div>
+        <div id="addMsg" class="add-msg"></div>
+        <div id="manageList" class="manage-list"></div>
+      </section>
+      <section class="block">
+        <h2 class="block-title">데이터 설정 (선택)</h2>
+        <p class="hint">
+          기본은 Yahoo Finance(무료·키 불필요)입니다. 데이터가 자주 끊기면
+          아래에 Twelve Data 무료 키를 넣어 백업으로 쓸 수 있어요.
+        </p>
+        <div class="add-row">
+          <input
+            id="apiKeyInput"
+            type="text"
+            placeholder="Twelve Data API Key (선택)"
+            autocomplete="off"
+          />
+          <button id="saveKeyBtn" class="primary-btn">저장</button>
+        </div>
+      </section>
+    </main>
+
+    <!-- ===== 종목 상세 (전체화면 오버레이) ===== -->
+    <div id="detail" class="detail">
+      <div class="detail-head">
+        <button id="detailClose" class="icon-btn">‹</button>
+        <div class="detail-title">
+          <div id="detailName" class="d-name"></div>
+          <div id="detailSym" class="d-sym"></div>
+        </div>
+      </div>
+      <div class="detail-price">
+        <span id="detailPrice" class="d-price"></span>
+        <span id="detailChg" class="d-chg"></span>
+      </div>
+      <div class="seg detail-seg">
+        <button class="seg-btn active" data-range="1mo|1d">일봉</button>
+        <button class="seg-btn" data-range="6mo|1wk">주봉</button>
+        <button class="seg-btn" data-range="2y|1mo">월봉</button>
+      </div>
+      <div class="chart-wrap"><canvas id="detailChart"></canvas></div>
+      <div id="detailMeta" class="detail-meta"></div>
+    </div>
+
+    <!-- ===== 하단 탭바 ===== -->
+    <nav class="tabbar">
+      <button class="tab active" data-view="dashboard">
+        <span>📊</span>대시보드
+      </button>
+      <button class="tab" data-view="etf"><span>💹</span>투신·ETF</button>
+      <button class="tab" data-view="settings"><span>⚙️</span>설정</button>
+    </nav>
+
+    <script src="app.js"></script>
+  </body>
+</html>
