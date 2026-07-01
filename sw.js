@@ -1,6 +1,6 @@
 /* 서비스워커: 앱 껍데기(HTML/CSS/JS)를 캐시해 오프라인에서도 화면이 뜨게 함.
    ※ 시세 데이터는 항상 실시간으로 네트워크에서 가져옵니다(캐시 안 함). */
-const CACHE = "kabu-v1";
+const CACHE = "kabu-v3";
 const SHELL = ["./", "./index.html", "./styles.css", "./app.js", "./manifest.json"];
 
 // 설치 시 앱 껍데기 캐시

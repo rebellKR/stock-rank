@@ -13,6 +13,26 @@
   --safe-bottom: env(safe-area-inset-bottom);
 }
 
+/* ===== 라이트 모드 (data-theme="light" 일 때 색만 덮어씀) ===== */
+[data-theme="light"] {
+  --bg: #f5f6f8;          /* 밝은 회색 배경 */
+  --card: #ffffff;        /* 흰 카드 */
+  --card-2: #eef0f4;      /* 옅은 회색 강조 */
+  --line: #e3e6ec;        /* 구분선 */
+  --text: #1a1d24;        /* 진한 글자 */
+  --text-dim: #6b7280;    /* 흐린 글자 */
+  --up: #e5383b;          /* 상승 = 빨강 (밝은 배경용 약간 진하게) */
+  --down: #1d6fd6;        /* 하락 = 파랑 */
+  --accent: #f5a623;      /* 포인트 컬러 유지 */
+}
+
+/* 테마 전환 시 부드럽게 (재미 요소) */
+body, .app-header, .status-bar, .index-card, .quote-row, .manage-row,
+.meta-item, .chart-wrap, .add-row input, .tabbar, .detail, .seg,
+.seg-btn, .icon-btn, .theme-toggle {
+  transition: background-color .45s ease, color .45s ease, border-color .45s ease;
+}
+
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 html, body { margin: 0; padding: 0; }
 body {
@@ -154,3 +174,37 @@ body {
 /* 로딩 스켈레톤 */
 .skeleton { background: linear-gradient(90deg, var(--card) 25%, var(--card-2) 37%, var(--card) 63%); background-size: 400% 100%; animation: sk 1.3s infinite; border-radius: 12px; height: 58px; }
 @keyframes sk { 0% { background-position: 100% 0; } 100% { background-position: -100% 0; } }
+
+/* ===== 헤더 우측 액션(새로고침 + 테마토글) ===== */
+.header-actions { display: flex; align-items: center; gap: 8px; }
+
+/* ===== 테마 토글 스위치 ===== */
+.theme-toggle {
+  position: relative; width: 58px; height: 32px; flex: none;
+  border: 1px solid var(--line); border-radius: 999px;
+  background: var(--card-2); cursor: pointer; padding: 0;
+  overflow: hidden;
+}
+/* 슬라이딩 노브 (통통 튀는 전환으로 재미 요소) */
+.tt-knob {
+  position: absolute; top: 2px; left: 2px;
+  width: 26px; height: 26px; border-radius: 50%;
+  background: var(--accent);
+  display: flex; align-items: center; justify-content: center;
+  transition: transform .4s cubic-bezier(.68, -0.55, .27, 1.55);
+  box-shadow: 0 2px 6px rgba(0,0,0,.3);
+}
+[data-theme="light"] .tt-knob { transform: translateX(26px); }
+/* 아이콘: 현재 테마에 맞는 것만 보이게 */
+.tt-moon, .tt-sun {
+  position: absolute; font-size: 14px; line-height: 1;
+  transition: opacity .3s ease, transform .4s ease;
+}
+.tt-sun { opacity: 0; transform: rotate(-90deg) scale(.5); }
+.tt-moon { opacity: 1; }
+[data-theme="light"] .tt-moon { opacity: 0; transform: rotate(90deg) scale(.5); }
+[data-theme="light"] .tt-sun { opacity: 1; transform: rotate(0) scale(1); }
+
+/* ===== 라이트 모드: 헤더/탭바 반투명 배경도 밝게 ===== */
+[data-theme="light"] .app-header { background: rgba(245,246,248,0.9); }
+[data-theme="light"] .tabbar { background: rgba(245,246,248,0.95); }

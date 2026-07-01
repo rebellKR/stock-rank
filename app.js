@@ -48,7 +48,7 @@ const NAMES = {
 };
 
 // localStorage 저장 키
-const LS = { watch: "kabu_watch", key: "kabu_apikey" };
+const LS = { watch: "kabu_watch", key: "kabu_apikey", theme: "kabu_theme" };
 
 // ---------- 2. 저장소 유틸 ----------
 function getWatch() {
@@ -384,6 +384,22 @@ document.getElementById("saveKeyBtn").addEventListener("click", () => {
   alert("저장되었습니다.");
 });
 document.getElementById("apiKeyInput").value = getApiKey();
+
+// ---------- 테마 토글 (다크 ↔ 라이트) ----------
+function applyTheme(t) {
+  document.documentElement.setAttribute("data-theme", t); // 색상 전환
+  localStorage.setItem(LS.theme, t);                      // 선택 기억
+  const meta = document.querySelector('meta[name="theme-color"]');
+  if (meta) meta.setAttribute("content", t === "light" ? "#f5f6f8" : "#0e1117");
+  // 상세 차트가 열려 있으면 새 테마 색으로 다시 그림
+  if (document.getElementById("detail").classList.contains("open") && currentDetailSym) {
+    loadDetailChart();
+  }
+}
+document.getElementById("themeToggle").addEventListener("click", () => {
+  const now = document.documentElement.getAttribute("data-theme") || "dark";
+  applyTheme(now === "dark" ? "light" : "dark");
+});
 
 // ---------- 8. 시작 ----------
 refreshAll();
